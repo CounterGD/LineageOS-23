@@ -4,7 +4,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04 # Android 9 cần môi trường cũ hơn để tránh lỗi biên dịch
+    runs-on: ubuntu-22.04 # Android 9 cần môi trường cũ hơn để tránh lỗi biên dịch
     steps:
       - name: Cleanup Disk Space
         run: |
