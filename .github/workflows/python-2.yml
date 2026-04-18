@@ -1,0 +1,12 @@
+       name: "Install Python older version"
+        run: |
+          # Cài đặt Python 2 nếu chưa có
+          sudo apt-get update
+          sudo apt-get install -y python2
+          
+          # Dùng update-alternatives để ép hệ thống dùng Python 2 cho lệnh 'python'
+          sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+          
+          # Kiểm tra lại (Nó phải hiện ra Python 2.7.x)
+          python --version
+          
