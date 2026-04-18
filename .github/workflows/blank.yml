@@ -1,0 +1,48 @@
+name: Build LineageOS 16.0 (Android 9)
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04 # Android 9 cần môi trường cũ hơn để tránh lỗi biên dịch
+    steps:
+      - name: Cleanup Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          sudo docker image prune -a -f
+          df -h
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python-is-python3
+
+      - name: Install Repo Tool
+        run: |
+          mkdir ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          sudo ln -sf ~/bin/repo /usr/bin/repo
+
+      - name: Sync Source (Android 9)
+        run: |
+          git config --global user.email "countergd@example.com"
+          git config --global user.name "CounterGD"
+          repo init -u https://github.com/LineageOS/android.git -b lineage-16.0 --depth=1
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+      - name: Build Generic ARM64
+        run: |
+          source build/envsetup.sh
+          lunch lineage_arm64-userdebug
+          make systemimage -j$(nproc --all)
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lineage-9-GSI
+          path: out/target/product/generic_arm64/system.img
+          
