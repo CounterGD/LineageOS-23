@@ -35,7 +35,8 @@ jobs:
           git config --global user.email "countergd@example.com"
           git config --global user.name "CounterGD"
           repo init -u https://github.com/LineageOS/android.git -b lineage-23.0 --depth=1
-          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --current-branch
+
 
       - name: Build Generic ARM64
         run: |
