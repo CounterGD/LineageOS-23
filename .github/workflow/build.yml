@@ -1,0 +1,51 @@
+name: Build LineageOS 23 (Android 16)
+on:
+  workflow_dispatch: # Cho phép mày bấm nút "Run" bằng tay từ điện thoại
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04 # Dùng bản Ubuntu mới nhất để có Toolchain phù hợp
+    steps:
+      - name: Maximize Build Space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 512
+          swap-size-mb: 10240 # Tạo 10GB Swap để bù RAM
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Build Tools
+        run: |
+          sudo apt update
+          sudo apt install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32readline-dev lib32z1-dev libelf-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev -y
+
+      - name: Install Repo Tool
+        run: |
+          mkdir ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          sudo ln -sf ~/bin/repo /usr/bin/repo
+
+      - name: Sync Source (Lineage 23)
+        run: |
+          git config --global user.email "countergd@example.com"
+          git config --global user.name "CounterGD"
+          repo init -u https://github.com/LineageOS/android.git -b lineage-23.0 --depth=1
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+      - name: Build Generic ARM64
+        run: |
+          source build/envsetup.sh
+          lunch lineage_arm64-userdebug
+          m -j$(nproc --all)
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lineage-16-Generic-Image
+          path: out/target/product/generic_arm64/*.img
+          
